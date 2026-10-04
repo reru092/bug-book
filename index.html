@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f7f8">
+<title>BUG BOOK</title>
+<style>
+:root{
+  --bg:#f7f7f8; --card:#fff; --text:#111; --muted:#777;
+  --line:#e7e7ea; --soft:#f1f1f3; --shadow:0 10px 30px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
+  "Noto Sans KR","Apple SD Gothic Neo",sans-serif;
+  background:var(--bg); color:var(--text);
+}
+.app{max-width:680px;margin:0 auto;min-height:100vh;padding:22px 18px 96px}
+.header{padding:10px 2px 22px}
+.kicker{font-size:12px;letter-spacing:.14em;color:var(--muted);font-weight:700}
+h1{font-size:34px;letter-spacing:-.03em;margin:6px 0 6px}
+.sub{font-size:14px;color:var(--muted)}
+.tabs{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:#eaeaed;
+  padding:5px;border-radius:14px;position:sticky;top:8px;z-index:10;
+  backdrop-filter:blur(12px); margin-bottom:16px;
+}
+.tab{border:0;background:transparent;padding:10px 8px;border-radius:10px;font-weight:700;color:#666;cursor:pointer}
+.tab.active{background:#fff;color:#111;box-shadow:0 1px 5px rgba(0,0,0,.08)}
+.panel{display:none}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin:14px 0;box-shadow:var(--shadow)}
+.label{font-size:18px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+.help{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px}
+textarea,input{width:100%;font:inherit;border:1px solid var(--line);border-radius:14px;padding:14px;background:#fafafa;outline:none}
+textarea{min-height:145px;resize:vertical;line-height:1.55}
+textarea:focus,input:focus{border-color:#aaa;background:#fff}
+.stepper{display:grid;grid-template-columns:54px 1fr 54px;gap:10px;align-items:center}
+.stepper button{height:50px;border:0;border-radius:14px;background:var(--soft);font-size:26px;cursor:pointer}
+.hours{text-align:center;font-size:24px;font-weight:800;background:#fff}
+.quality{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.qbtn{border:1px solid var(--line);background:#fff;border-radius:14px;padding:15px 4px;font-weight:800;font-size:17px;cursor:pointer}
+.qbtn.selected{background:#111;color:#fff;border-color:#111}
+.conditional{display:none}
+.primary{width:100%;border:0;border-radius:16px;padding:16px;background:#111;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-top:10px}
+.date{font-size:14px;color:var(--muted);font-weight:700;margin-top:3px}
+.note{font-size:12px;color:var(--muted);line-height:1.55;margin-top:10px}
+.empty{text-align:center;color:var(--muted);padding:44px 20px}
+.row{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin:10px 0}
+.rowtop{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.badge{font-size:14px;font-weight:800;background:var(--soft);padding:6px 10px;border-radius:999px}
+.meta{font-size:13px;color:var(--muted);margin-top:8px}
+.bodytext{font-size:14px;line-height:1.55;margin-top:10px;white-space:pre-wrap}
+.reason{font-size:13px;line-height:1.5;margin-top:9px;padding:10px 12px;border-radius:12px;background:#fafafa}
+.metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.metric{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
+.metric .n{font-size:28px;font-weight:850;letter-spacing:-.03em}
+.metric .t{font-size:12px;color:var(--muted);margin-top:4px}
+.dist{display:grid;grid-template-columns:44px 1fr 32px;gap:8px;align-items:center;margin:10px 0}
+.bar{height:10px;background:#eee;border-radius:999px;overflow:hidden}
+.fill{height:100%;background:#111;border-radius:999px}
+.sectionTitle{font-size:20px;font-weight:850;margin:24px 2px 8px}
+.smallbtn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 11px;font-weight:700;cursor:pointer}
+.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.footer{font-size:12px;color:#999;text-align:center;padding:22px}
+@media (max-width:420px){
+  .app{padding:14px 12px 90px}
+  h1{font-size:30px}
+  .card{padding:17px;border-radius:18px}
+  .quality{gap:6px}
+  .qbtn{font-size:16px;padding:14px 2px}
+}
+</style>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="BUG BOOK">
+<meta name="mobile-web-app-capable" content="yes">
+
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="kicker">PERSONAL OBSERVATION LOG</div>
+    <h1>BUG BOOK</h1>
+    <div class="sub">관찰하고 기록한다. 판단하지 않는다.</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="today">오늘</button>
+    <button class="tab" data-tab="records">기록</button>
+    <button class="tab" data-tab="analysis">분석</button>
+  </div>
+
+  <section id="today" class="panel active">
+    <div class="card">
+      <div class="label">기록 날짜</div>
+      <div class="help">기록할 날짜를 선택합니다. 기본값은 오늘입니다.</div>
+      <input id="recordDate" type="date">
+    </div>
+
+    <div class="card">
+      <div class="label">오늘 하루를 어떤 일들로 채웠습니까?</div>
+      <div class="help">분류하지 말고, 실제 있었던 일을 자유롭게 기록합니다.</div>
+      <textarea id="activities" placeholder="오늘 있었던 일을 자유롭게 적어주세요."></textarea>
+    </div>
+
+    <div class="card">
+      <div class="label">오늘 창조적 시간은?</div>
+      <div class="help">센터 운영 기획·구상 또는 센터와 연결한 교육 사업화 기획·구상 시간만 기록합니다.</div>
+      <div class="stepper">
+        <button id="minus" aria-label="30분 줄이기">−</button>
+        <input id="creativeHours" class="hours" type="number" min="0" step="0.5" value="0">
+        <button id="plus" aria-label="30분 늘리기">＋</button>
+      </div>
+      <div class="note">단순 자료 읽기·강의 듣기·회의 참석·행정 처리·자료 정리는 제외. 실제 기획·구상이 시작된 시간만 포함합니다.</div>
+    </div>
+
+    <div class="card">
+      <div class="label">오늘 하루의 질은?</div>
+      <div class="quality" id="qualityButtons">
+        <button class="qbtn" data-value="-2">−2</button>
+        <button class="qbtn" data-value="-1">−1</button>
+        <button class="qbtn" data-value="0">0</button>
+        <button class="qbtn" data-value="1">＋1</button>
+        <button class="qbtn" data-value="2">＋2</button>
+      </div>
+    </div>
+
+    <div class="card conditional" id="reasonCard">
+      <div class="label" id="reasonLabel">왜 오늘이 유난히 좋았거나 힘들었습니까?</div>
+      <div class="help">+2 또는 −2인 날에만 기록합니다.</div>
+      <textarea id="reason" placeholder="이유를 자유롭게 적어주세요."></textarea>
+    </div>
+
+    <button class="primary" id="saveBtn">오늘 기록 저장</button>
+    <div class="footer" id="todayDate"></div>
+  </section>
+
+  <section id="records" class="panel">
+    <div class="sectionTitle">누적 기록</div>
+    <div id="recordList"></div>
+  </section>
+
+  <section id="analysis" class="panel">
+    <div class="sectionTitle">기본 분석</div>
+    <div class="help">원본 기록을 바꾸지 않고, 숫자로 확인할 수 있는 항목만 보여줍니다.</div>
+    <div class="metrics">
+      <div class="metric"><div class="n" id="countMetric">0</div><div class="t">기록 일수</div></div>
+      <div class="metric"><div class="n" id="avgMetric">–</div><div class="t">평균 하루의 질</div></div>
+      <div class="metric"><div class="n" id="hoursMetric">0h</div><div class="t">총 창조적 시간</div></div>
+      <div class="metric"><div class="n" id="avgHoursMetric">–</div><div class="t">하루 평균 창조적 시간</div></div>
+    </div>
+    <div class="sectionTitle">하루의 질 분포</div>
+    <div class="card" id="distribution"></div>
+    <div class="sectionTitle">+2 / −2 기록</div>
+    <div id="extremeList"></div>
+  </section>
+</div>
+
+<script>
+const KEY = 'bugbook_v1_records';
+let selectedQuality = null;
+
+function todayISO(){
+  const d = new Date();
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function prettyDate(iso){
+  const d = new Date(iso+'T00:00:00');
+  return new Intl.DateTimeFormat('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'}).format(d);
+}
+function load(){ try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]} }
+function saveAll(rows){ localStorage.setItem(KEY, JSON.stringify(rows)); }
+function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
+const recordDateEl = document.getElementById('recordDate');
+recordDateEl.value = todayISO();
+function syncDateLabel(){
+  const d = recordDateEl.value || todayISO();
+  document.getElementById('todayDate').textContent = prettyDate(d);
+}
+recordDateEl.addEventListener('change', syncDateLabel);
+syncDateLabel();
+
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='records') renderRecords();
+    if(btn.dataset.tab==='analysis') renderAnalysis();
+  });
+});
+
+document.getElementById('minus').onclick=()=>{
+  const el=document.getElementById('creativeHours');
+  el.value=Math.max(0,(parseFloat(el.value)||0)-0.5);
+};
+document.getElementById('plus').onclick=()=>{
+  const el=document.getElementById('creativeHours');
+  el.value=(parseFloat(el.value)||0)+0.5;
+};
+
+document.querySelectorAll('.qbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    selectedQuality = Number(btn.dataset.value);
+    document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    const extreme = Math.abs(selectedQuality)===2;
+    document.getElementById('reasonCard').style.display = extreme ? 'block' : 'none';
+    document.getElementById('reasonLabel').textContent =
+      selectedQuality===2 ? '왜 오늘이 유난히 좋았습니까?' :
+      selectedQuality===-2 ? '왜 오늘이 유난히 힘들었습니까?' :
+      '왜 오늘이 유난히 좋았거나 힘들었습니까?';
+    if(!extreme) document.getElementById('reason').value='';
+  });
+});
+
+document.getElementById('saveBtn').onclick=()=>{
+  const activities=document.getElementById('activities').value.trim();
+  const hours=parseFloat(document.getElementById('creativeHours').value)||0;
+  const reason=document.getElementById('reason').value.trim();
+  if(!activities){ alert('오늘 하루를 어떤 일들로 채웠는지 기록해주세요.'); return; }
+  if(selectedQuality===null){ alert('오늘 하루의 질을 선택해주세요.'); return; }
+  if(Math.abs(selectedQuality)===2 && !reason){ 
+    if(!confirm('+2 또는 −2의 이유가 비어 있습니다. 그대로 저장할까요?')) return;
+  }
+  const rows=load();
+  const date=recordDateEl.value || todayISO();
+  const rec={date,activities,creativeHours:hours,quality:selectedQuality,reason};
+  const idx=rows.findIndex(r=>r.date===date);
+  if(idx>=0){
+    if(!confirm('선택한 날짜의 기록이 이미 있습니다. 덮어쓸까요?')) return;
+    rows[idx]=rec;
+  } else rows.push(rec);
+  rows.sort((a,b)=>a.date.localeCompare(b.date));
+  saveAll(rows);
+  alert('기록을 저장했습니다.');
+  renderRecords(); renderAnalysis();
+};
+
+function renderRecords(){
+  const rows=load().slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const box=document.getElementById('recordList');
+  if(!rows.length){box.innerHTML='<div class="empty">아직 기록이 없습니다.</div>';return;}
+  box.innerHTML=rows.map(r=>`
+    <div class="row">
+      <div class="rowtop">
+        <div><b>${esc(prettyDate(r.date))}</b></div>
+        <div class="badge">${r.quality>0?'+':''}${r.quality}</div>
+      </div>
+      <div class="meta">창조적 시간 ${Number(r.creativeHours).toFixed(1)}시간</div>
+      <div class="bodytext">${esc(r.activities)}</div>
+      ${r.reason?`<div class="reason">${esc(r.reason)}</div>`:''}
+      <div class="actions"><button class="smallbtn" onclick="editRecord('${r.date}')">수정</button></div>
+    </div>
+  `).join('');
+}
+window.editRecord=function(date){
+  const r=load().find(x=>x.date===date); if(!r)return;
+  recordDateEl.value=r.date;
+  syncDateLabel();
+  document.getElementById('activities').value=r.activities;
+  document.getElementById('creativeHours').value=r.creativeHours;
+  selectedQuality=r.quality;
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.toggle('selected',Number(b.dataset.value)===r.quality));
+  const extreme=Math.abs(r.quality)===2;
+  document.getElementById('reasonCard').style.display=extreme?'block':'none';
+  document.getElementById('reason').value=r.reason||'';
+  document.querySelector('[data-tab="today"]').click();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+function renderAnalysis(){
+  const rows=load();
+  const n=rows.length;
+  document.getElementById('countMetric').textContent=n;
+  if(!n){
+    document.getElementById('avgMetric').textContent='–';
+    document.getElementById('hoursMetric').textContent='0h';
+    document.getElementById('avgHoursMetric').textContent='–';
+    document.getElementById('distribution').innerHTML='<div class="empty">기록이 쌓이면 분포가 보입니다.</div>';
+    document.getElementById('extremeList').innerHTML='<div class="empty">+2 / −2 기록이 아직 없습니다.</div>';
+    return;
+  }
+  const avg=rows.reduce((s,r)=>s+r.quality,0)/n;
+  const total=rows.reduce((s,r)=>s+(Number(r.creativeHours)||0),0);
+  document.getElementById('avgMetric').textContent=(avg>=0?'+':'')+avg.toFixed(2);
+  document.getElementById('hoursMetric').textContent=total.toFixed(1)+'h';
+  document.getElementById('avgHoursMetric').textContent=(total/n).toFixed(1)+'h';
+
+  const counts={2:0,1:0,0:0,'-1':0,'-2':0};
+  rows.forEach(r=>counts[r.quality]++);
+  document.getElementById('distribution').innerHTML=[2,1,0,-1,-2].map(v=>{
+    const c=counts[v], pct=n?Math.round(c/n*100):0;
+    return `<div class="dist"><b>${v>0?'+':''}${v}</b><div class="bar"><div class="fill" style="width:${pct}%"></div></div><span>${c}</span></div>`;
+  }).join('');
+
+  const extremes=rows.filter(r=>Math.abs(r.quality)===2).sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('extremeList').innerHTML=extremes.length?extremes.map(r=>`
+    <div class="row">
+      <div class="rowtop"><b>${esc(prettyDate(r.date))}</b><div class="badge">${r.quality>0?'+':''}${r.quality}</div></div>
+      <div class="reason">${esc(r.reason||'이유 기록 없음')}</div>
+    </div>`).join(''):'<div class="empty">+2 / −2 기록이 아직 없습니다.</div>';
+}
+renderRecords(); renderAnalysis();
+</script>
+
+<script>
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+</script>
+
+</body>
+</html>
