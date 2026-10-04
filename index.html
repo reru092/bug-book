@@ -161,7 +161,44 @@ textarea:focus,input:focus{border-color:#aaa;background:#fff}
 
 <script>
 const KEY = 'bugbook_v1_records';
+const SYNC_KEY_STORAGE = 'bugbook_notion_sync_key';
+const SYNC_URL = 'https://bug-book-sync-reru092.floot.app/_api/bugbook-sync';
 let selectedQuality = null;
+
+async function syncToNotion(rec){
+  let syncKey = localStorage.getItem(SYNC_KEY_STORAGE) || '';
+  if(!syncKey){
+    syncKey = prompt('처음 한 번만 입력합니다. Floot에 등록한 BUGBOOK_SYNC_KEY를 입력하세요.') || '';
+    syncKey = syncKey.trim();
+    if(syncKey) localStorage.setItem(SYNC_KEY_STORAGE, syncKey);
+  }
+  if(!syncKey) return {ok:false, skipped:true};
+
+  const payload = {
+    syncKey,
+    date: rec.date,
+    activities: rec.activities,
+    creativeHours: Number(rec.creativeHours)||0,
+    quality: rec.quality > 0 ? '+' + rec.quality : String(rec.quality),
+    extremeReason: rec.reason || ''
+  };
+
+  try{
+    const res = await fetch(SYNC_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=UTF-8'},
+      body:JSON.stringify(payload)
+    });
+    if(res.status===401){
+      localStorage.removeItem(SYNC_KEY_STORAGE);
+      return {ok:false, auth:true};
+    }
+    if(!res.ok) return {ok:false};
+    return {ok:true};
+  }catch(e){
+    return {ok:false};
+  }
+}
 
 function todayISO(){
   const d = new Date();
@@ -220,7 +257,7 @@ document.querySelectorAll('.qbtn').forEach(btn=>{
   });
 });
 
-document.getElementById('saveBtn').onclick=()=>{
+document.getElementById('saveBtn').onclick=async()=>{
   const activities=document.getElementById('activities').value.trim();
   const hours=parseFloat(document.getElementById('creativeHours').value)||0;
   const reason=document.getElementById('reason').value.trim();
@@ -239,7 +276,16 @@ document.getElementById('saveBtn').onclick=()=>{
   } else rows.push(rec);
   rows.sort((a,b)=>a.date.localeCompare(b.date));
   saveAll(rows);
-  alert('기록을 저장했습니다.');
+  const sync = await syncToNotion(rec);
+  if(sync.ok){
+    alert('아이폰과 Notion에 함께 저장했습니다.');
+  } else if(sync.auth){
+    alert('아이폰에는 저장했습니다. Notion 동기화 암호가 맞지 않아 다음 저장 때 다시 입력받습니다.');
+  } else if(sync.skipped){
+    alert('아이폰에는 저장했습니다. Notion 동기화는 건너뛰었습니다.');
+  } else {
+    alert('아이폰에는 저장했습니다. Notion 동기화에 실패했습니다. 인터넷 연결 또는 Notion 권한을 확인해주세요.');
+  }
   renderRecords(); renderAnalysis();
 };
 
