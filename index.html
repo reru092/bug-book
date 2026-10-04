@@ -163,15 +163,21 @@ textarea:focus,input:focus{border-color:#aaa;background:#fff}
 const KEY = 'bugbook_v1_records';
 const SYNC_KEY_STORAGE = 'bugbook_notion_sync_key';
 const SYNC_URL = 'https://bug-book-sync-reru092.floot.app/_api/bugbook-sync';
+const LIST_URL = 'https://bug-book-sync-reru092.floot.app/_api/bugbook-list';
 let selectedQuality = null;
 
-async function syncToNotion(rec){
+function getSyncKey(promptIfMissing=false){
   let syncKey = localStorage.getItem(SYNC_KEY_STORAGE) || '';
-  if(!syncKey){
+  if(!syncKey && promptIfMissing){
     syncKey = prompt('처음 한 번만 입력합니다. Floot에 등록한 BUGBOOK_SYNC_KEY를 입력하세요.') || '';
     syncKey = syncKey.trim();
     if(syncKey) localStorage.setItem(SYNC_KEY_STORAGE, syncKey);
   }
+  return syncKey;
+}
+
+async function syncToNotion(rec){
+  let syncKey = getSyncKey(true);
   if(!syncKey) return {ok:false, skipped:true};
 
   const payload = {
@@ -195,6 +201,36 @@ async function syncToNotion(rec){
     }
     if(!res.ok) return {ok:false};
     return {ok:true};
+  }catch(e){
+    return {ok:false};
+  }
+}
+
+
+async function refreshFromNotion(promptIfMissing=false){
+  const syncKey = getSyncKey(promptIfMissing);
+  if(!syncKey) return {ok:false, skipped:true};
+
+  try{
+    const res = await fetch(LIST_URL,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=UTF-8'},
+      body:JSON.stringify({syncKey})
+    });
+    if(res.status===401){
+      localStorage.removeItem(SYNC_KEY_STORAGE);
+      return {ok:false, auth:true};
+    }
+    if(!res.ok) return {ok:false};
+
+    const data = await res.json();
+    const remote = Array.isArray(data.records) ? data.records : [];
+    const merged = new Map();
+    load().forEach(r=>merged.set(r.date,r));
+    remote.forEach(r=>merged.set(r.date,r));
+    const rows=[...merged.values()].sort((a,b)=>a.date.localeCompare(b.date));
+    saveAll(rows);
+    return {ok:true,count:remote.length};
   }catch(e){
     return {ok:false};
   }
@@ -228,8 +264,17 @@ document.querySelectorAll('.tab').forEach(btn=>{
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
-    if(btn.dataset.tab==='records') renderRecords();
-    if(btn.dataset.tab==='analysis') renderAnalysis();
+    if(btn.dataset.tab==='records'){
+      renderRecords();
+      refreshFromNotion(true).then(result=>{
+        if(result.ok) renderRecords();
+        else if(result.auth) alert('동기화 암호가 맞지 않습니다. 다시 기록 탭을 누르면 재입력할 수 있습니다.');
+      });
+    }
+    if(btn.dataset.tab==='analysis'){
+      renderAnalysis();
+      refreshFromNotion(false).then(result=>{ if(result.ok) renderAnalysis(); });
+    }
   });
 });
 
@@ -354,6 +399,9 @@ function renderAnalysis(){
     </div>`).join(''):'<div class="empty">+2 / −2 기록이 아직 없습니다.</div>';
 }
 renderRecords(); renderAnalysis();
+refreshFromNotion(false).then(result=>{
+  if(result.ok){ renderRecords(); renderAnalysis(); }
+});
 </script>
 
 <script>
