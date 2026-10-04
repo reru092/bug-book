@@ -1,4 +1,4 @@
-const CACHE='bug-book-v2';
+const CACHE='bug-book-v3';
 const CORE=['./','./index.html','./manifest.webmanifest'];
 self.addEventListener('install',e=>{
   self.skipWaiting();
